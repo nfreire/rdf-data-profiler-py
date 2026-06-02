@@ -342,20 +342,46 @@ reader = RDFDumpReader(
 
 The application SHOULD NOT add separate RDF/XML parsing error handling unless needed to wrap user-facing error messages.
 
-## 11. Dependencies and Packaging
+## 11. Sampling Script
 
-### 11.1 Runtime dependencies
+The project MUST provide an additional script, independent from the statistics CLI, that extracts a sample of RDF records.
+
+The sampling script MUST read records through `rdf-dump-reader` and MUST NOT traverse ZIP files directly or parse RDF/XML directly.
+
+The sample MUST include only records whose graph contains this RDF statement:
+
+```turtle
+?s <http://www.w3.org/ns/oa#hasBody> <http://www.europeana.eu/schemas/epf/metadataTierC> .
+```
+
+The sampling script MUST extract a maximum of 2 matching records per subdataset.
+
+When processing a subdataset, if no record containing the required statement is found within the first 100 records for that subdataset, the script MUST skip the rest of that subdataset.
+
+At least once every 5 minutes during sampling, the script MUST print the total number of records exported so far.
+
+The sampling script MUST write the resulting sample to:
+
+```text
+EDM-Sample.zip
+```
+
+The output ZIP MUST contain the selected records in a deterministic order.
+
+## 12. Dependencies and Packaging
+
+### 12.1 Runtime dependencies
 
 * Python >= 3.10
 * `rdf-dump-reader`
 * `rdflib >= 7.0`
 * `openpyxl`
 
-### 11.2 Development dependencies
+### 12.2 Development dependencies
 
 * `pytest`
 
-### 11.3 Packaging
+### 12.3 Packaging
 
 The project SHOULD use `pyproject.toml`.
 
@@ -366,7 +392,14 @@ The CLI entry point SHOULD be declared using project scripts, for example:
 rdf-dataset-stats = "rdf_dataset_stats.cli:main"
 ```
 
-## 12. Testing Requirements
+The sampling script entry point SHOULD be declared using project scripts, for example:
+
+```toml
+[project.scripts]
+rdf-dataset-sample = "rdf_dataset_stats.sample:main"
+```
+
+## 13. Testing Requirements
 
 The test suite MUST use `pytest`.
 
@@ -394,8 +427,13 @@ Tests MUST cover:
 * Valid and unique Excel sheet names
 * CLI invocation with input and output paths
 * CLI progress reporting, including current subdataset name and periodic throughput estimates
+* Sampling script selection of records containing the required `oa:hasBody` metadata tier statement
+* Sampling script limit of 2 exported records per subdataset
+* Sampling script skip behavior when no matching record appears in the first 100 records of a subdataset
+* Sampling script periodic exported-record progress reporting
+* Sampling script writing `EDM-Sample.zip`
 
-## 13. Suggested Module Structure
+## 14. Suggested Module Structure
 
 ```text
 src/rdf_dataset_stats/
@@ -412,8 +450,9 @@ Suggested responsibilities:
 * `collector.py`: RDF graph analysis and aggregation logic
 * `excel.py`: spreadsheet writing
 * `cli.py`: command-line argument parsing and orchestration
+* `sample.py`: sample extraction script
 
-## 14. Acceptance Criteria
+## 15. Acceptance Criteria
 
 The implementation is acceptable when:
 
@@ -425,3 +464,4 @@ The implementation is acceptable when:
 * It writes a deterministic `.xlsx` workbook
 * Each RDF class has its own worksheet
 * Tests cover the required statistics and output behavior
+* The sampling script writes `EDM-Sample.zip` containing only selected matching records

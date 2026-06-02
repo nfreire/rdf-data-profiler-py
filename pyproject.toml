@@ -21,6 +21,7 @@ test = [
 
 [project.scripts]
 rdf-dataset-stats = "rdf_dataset_stats.cli:main"
+rdf-dataset-sample = "rdf_dataset_stats.sample:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
