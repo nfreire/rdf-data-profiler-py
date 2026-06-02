@@ -31,6 +31,7 @@ def extract_sample(
     output_path: str | Path = DEFAULT_OUTPUT_PATH,
     *,
     max_records_per_subdataset: int = 2,
+    max_records_total: int = 100,
     first_record_scan_limit: int = 100,
     progress_interval_seconds: float = 300.0,
     on_progress: Callable[[int], None] | None = None,
@@ -38,6 +39,13 @@ def extract_sample(
 ) -> int:
     """Extract matching records to a sample ZIP file."""
     from rdf_dump_reader import RDFDumpReader
+
+    if max_records_per_subdataset <= 0:
+        raise ValueError("max_records_per_subdataset must be greater than zero")
+    if max_records_total <= 0:
+        raise ValueError("max_records_total must be greater than zero")
+    if first_record_scan_limit <= 0:
+        raise ValueError("first_record_scan_limit must be greater than zero")
 
     reader = RDFDumpReader(
         input_path,
@@ -70,6 +78,9 @@ def extract_sample(
                 selected_records.append(_sample_record(record, len(selected_records)))
                 exported_records += 1
                 exported_in_subdataset += 1
+
+            if exported_records >= max_records_total:
+                break
 
             if exported_in_subdataset >= max_records_per_subdataset:
                 _skip_current_subdataset(reader)

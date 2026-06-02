@@ -144,6 +144,30 @@ def test_extract_sample_skips_subdataset_without_match_in_initial_records(
     assert read_zip_names(output_path) == ["000001-002-d.rdf"]
 
 
+def test_extract_sample_stops_after_total_record_limit(monkeypatch, tmp_path) -> None:
+    install_fake_reader(
+        monkeypatch,
+        [
+            FakeRecord(matching_graph(), "001", "a.rdf"),
+            FakeRecord(matching_graph(), "002", "b.rdf"),
+            FakeRecord(matching_graph(), "003", "c.rdf"),
+        ],
+    )
+    output_path = tmp_path / "EDM-Sample.zip"
+
+    exported = sample.extract_sample(
+        tmp_path,
+        output_path,
+        max_records_total=2,
+    )
+
+    assert exported == 2
+    assert read_zip_names(output_path) == [
+        "000001-001-a.rdf",
+        "000002-002-b.rdf",
+    ]
+
+
 def test_extract_sample_reports_periodic_progress(monkeypatch, tmp_path) -> None:
     install_fake_reader(
         monkeypatch,

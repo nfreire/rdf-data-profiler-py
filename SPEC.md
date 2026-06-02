@@ -354,9 +354,11 @@ The sample MUST include only records whose graph contains this RDF statement:
 ?s <http://www.w3.org/ns/oa#hasBody> <http://www.europeana.eu/schemas/epf/metadataTierC> .
 ```
 
-The sampling script MUST extract a maximum of 2 matching records per subdataset.
+The sampling script MUST extract a maximum of 2 matching records per subdataset. The script MUST skip the rest of that subdataset after 2 matching records are extracted.
 
 When processing a subdataset, if no record containing the required statement is found within the first 100 records for that subdataset, the script MUST skip the rest of that subdataset.
+
+The sampling script MUST extract a maximum of 100 matching records. After that the remaider of the dataset must be skiped.
 
 At least once every 5 minutes during sampling, the script MUST print the total number of records exported so far.
 
